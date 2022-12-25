@@ -1,0 +1,90 @@
+﻿@using WebAppIdentity.Models.ViewModels;
+@model RegisterViewModel
+
+@{
+    ViewData["Title"] = "Registrate";
+}
+
+<h2>Registrate</h2>
+
+<section>
+    <form asp-controller="Accounts" asp-action="Register" method="post" role="form">
+        <div class="text-danger" asp-validation-summary="All"></div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input type="text" asp-for="Name" class="form-control form-control-sm" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="UserName" class="form-label"></label>
+                    <input type="text" asp-for="UserName" class="form-control form-control-sm" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input type="email" asp-for="Email" class="form-control form-control-sm" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input type="tel" asp-for="PhoneNumber" class="form-control form-control-sm" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="PasswordHash" class="form-label"></label>
+                    <input type="password" asp-for="PasswordHash" class="form-control form-control-sm" />
+                    <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="ConfirmPasswordHash" class="form-label"></label>
+                    <input type="password" asp-for="ConfirmPasswordHash" class="form-control form-control-sm" />
+                    <span asp-validation-for="ConfirmPasswordHash" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label asp-for="Url" class="form-label"></label>
+                    <input type="url" asp-for="Url" class="form-control form-control-sm" />
+                    <span asp-validation-for="Url" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Country" class="form-label"></label>
+                    <input type="text" asp-for="Country" class="form-control form-control-sm" />
+                    <span asp-validation-for="Country" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="CountryCode" class="form-label"></label>
+                    <input type="number" asp-for="CountryCode" class="form-control form-control-sm" />
+                    <span asp-validation-for="CountryCode" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="City" class="form-label"></label>
+                    <input type="text" asp-for="City" class="form-control form-control-sm" />
+                    <span asp-validation-for="City" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label"></label>
+                    <input type="text" asp-for="Address" class="form-control form-control-sm" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input type="date" asp-for="DateOfBirth" class="form-control form-control-sm" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+                
+            </div>
+        </div>
+        <div class="mb-5 py-2 text-center">
+            <button type="submit" style="width: 360px;" class="btn btn-dark">Registrarme</button>
+
+            <div class="mt-3 text-center">
+                <a class="btn btn-warning">Google</a>
+                <a class="btn btn-primary">Facebook</a>
+            </div>
+        </div>
+    </form>
+</section>
