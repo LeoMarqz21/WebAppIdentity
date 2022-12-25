@@ -17,6 +17,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
 
 builder.Services.AddRouting(options=>options.LowercaseUrls= true);
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 #endregion
 
 var app = builder.Build();

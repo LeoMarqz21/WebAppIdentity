@@ -16,3 +16,11 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.cl-violet {
+    color: #4c2882;
+}
+
+.bg-violet {
+    background: #4c2882;
+}
