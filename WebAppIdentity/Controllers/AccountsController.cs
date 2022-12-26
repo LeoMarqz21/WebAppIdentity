@@ -35,6 +35,7 @@ namespace WebAppIdentity.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             logger.LogInformation("proceso de guardado de datos");
@@ -71,6 +72,7 @@ namespace WebAppIdentity.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             logger.LogInformation("proceso de inicio de sesion");
@@ -95,6 +97,15 @@ namespace WebAppIdentity.Controllers
             logger.LogInformation("hubo un error en el metodo de inicio de sesion");
             //retornamos la vista
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            //metodo de cierre de sesion
+            await signInManager.SignOutAsync();
+            return RedirectToAction("Login", "Accounts");
         }
 
         public IActionResult RecoverPassword()
