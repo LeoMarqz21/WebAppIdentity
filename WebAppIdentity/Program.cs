@@ -15,6 +15,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => {
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+//configuramos la url de retorno o redirección
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = new PathString("/Accounts/Login");
+});
+
 builder.Services.AddRouting(options=>options.LowercaseUrls= true);
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

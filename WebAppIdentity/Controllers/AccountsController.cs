@@ -27,18 +27,21 @@ namespace WebAppIdentity.Controllers
         } 
 
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(string returnUrl = null)
         {
+            //si returnUrl es null, este se llenara con la direccion a pagina raiz
+            returnUrl = returnUrl ?? Url.Content("~/");
+            ViewData["returnUrl"] = returnUrl;
             var model = new RegisterViewModel();
-            logger.LogInformation("Mostrando vista de registro");
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
-            logger.LogInformation("proceso de guardado de datos");
+            returnUrl = returnUrl ?? Url.Content("~/");
+            ViewData["returnUrl"] = returnUrl;
             //valida si no hay errores
             if (!ModelState.IsValid)
             {
@@ -54,7 +57,7 @@ namespace WebAppIdentity.Controllers
                 //se crea una sesión
                 await signInManager.SignInAsync(user, isPersistent: false);
                 //nos redirige al Home de la aplicación
-                return RedirectToAction("Index", "Home");
+                return LocalRedirect(returnUrl);
             }
             logger.LogInformation("hubo un error en el guardado de datos del metodo de registro");
             //manejo los erores y los carga para mostrarselos al usuario
@@ -64,18 +67,21 @@ namespace WebAppIdentity.Controllers
         }   
 
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl = null)
         {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            ViewData["returnUrl"] = returnUrl;
             var model = new LoginViewModel();
-            logger.LogInformation("Mostrando vista de inicio de sesion");
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
-            logger.LogInformation("proceso de inicio de sesion");
+            returnUrl = returnUrl ?? Url.Content("~/");
+            //capturamos la url de retorno
+            ViewData["returnUrl"] = returnUrl;
             //verificamos si existen errores
             if (!ModelState.IsValid)
             {
@@ -88,7 +94,8 @@ namespace WebAppIdentity.Controllers
             if(result.Succeeded)
             {
                 //todo va bien
-                return RedirectToAction("Index", "Home");
+                //return RedirectToAction("Index", "Home");
+                return LocalRedirect(returnUrl);
             }else
             {
                 //hubo errores y estos se retornara junto a la vista nuevamente
