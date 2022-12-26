@@ -9,7 +9,7 @@
 
 <section>
     <form asp-controller="Accounts" asp-action="Register" method="post" role="form">
-        <div class="text-danger" asp-validation-summary="All"></div>
+        <div class="text-danger" asp-validation-summary="ModelOnly"></div>
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
@@ -78,7 +78,30 @@
                 
             </div>
         </div>
-        <div class="mb-5 py-2 text-center">
+        <div class="mb-2  py-2 text-center">
             <button type="submit" style="width: 360px;" class="btn btn-success">Registrarme</button>
+        </div>
+
+        <div>
+            <p class="text-center text-muted">
+                Ya te has registrado?
+                <a asp-action="Login" asp-controller="Accounts" class="">Iniciar Sesión</a>
+            </p>
+            
+        </div>
+
+        <div class="mb-3 mt-3">
+            <p class="text-center fw-bold mb-3">--- Inicio sesión con metodos externos ---</p>
+
+            <div class="d-flex justify-content-center gap-3">
+                <a class="btn-social-network btn-google"><i class="bi bi-google"></i>oogle</a>
+                <a class="btn-social-network btn-facebook"><i class="bi bi-facebook"></i>acebook</a>
+            </div>
+        </div>
     </form>
 </section>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

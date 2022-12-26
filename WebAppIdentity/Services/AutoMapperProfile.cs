@@ -10,6 +10,7 @@ namespace WebAppIdentity.Services
         {
             //source, target
             CreateMap<RegisterViewModel, User>();
+            CreateMap<LoginViewModel, User>();
         }
     }
 }

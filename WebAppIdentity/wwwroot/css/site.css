@@ -24,3 +24,26 @@ body {
 .bg-violet {
     background: #4c2882;
 }
+/*******************/
+/*social networks*/
+/*******************/
+.btn-social-network {
+    border:1px solid black;
+    padding:5px 20px;
+    color:black;
+    background:white;
+    border-radius:5px;
+    text-decoration:none;
+}
+
+.btn-facebook:hover {
+    color: #0A58CA;
+    border: 1px solid #0A58CA;
+    cursor:pointer;
+}
+
+.btn-google:hover {
+    color: #DE4032;
+    border: 1px solid #DE4032;
+    cursor: pointer;
+}

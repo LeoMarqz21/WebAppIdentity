@@ -6,9 +6,8 @@ namespace WebAppIdentity.Models.ViewModels
     public class LoginViewModel
     {
         [Required]
-        [EmailAddress]
-        [Display(Name = "Correo Electronico *")]
-        public string Email { get; set; }
+        [Display(Name = "Nombre de usuario *")]
+        public string UserName { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
