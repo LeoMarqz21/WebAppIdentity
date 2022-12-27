@@ -19,6 +19,17 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = new PathString("/Accounts/Login");
+    options.AccessDeniedPath = new PathString("Accounts/BlockedAccount");
+});
+
+//configuraciones de identity
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequiredLength = 4;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
+    options.Lockout.MaxFailedAccessAttempts = 3;
 });
 
 builder.Services.AddRouting(options=>options.LowercaseUrls= true);

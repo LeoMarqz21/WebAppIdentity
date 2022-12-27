@@ -89,7 +89,13 @@ namespace WebAppIdentity.Controllers
             }
             //ingresamos datos de inicio de sesion
             var result = await signInManager
-                .PasswordSignInAsync(model.UserName, model.PasswordHash, isPersistent: model.RememberMe, lockoutOnFailure: false);
+                .PasswordSignInAsync(model.UserName, model.PasswordHash, isPersistent: model.RememberMe, lockoutOnFailure: true);
+            //verificamos si no se ha bloqueado esta cuenta
+            if(result.IsLockedOut)
+            {
+                ModelState.AddModelError(string.Empty, "Espere un minuto y luego intente iniciar sesion");
+                return View(model);
+            }
             //resultado de intento de inicio de sesion
             if(result.Succeeded)
             {
