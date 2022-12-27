@@ -126,6 +126,12 @@ namespace WebAppIdentity.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> RecoverPassword(RecoverPasswordViewModel model)
+        {
+            return Ok();
+        }
+
         private void ErrorHandler(IdentityResult result)
         {
             foreach (var error in result.Errors)
