@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using WebAppIdentity;
+using WebAppIdentity.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => {
         });
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders(); //necesario para generar token de recuperacion de contraseña
 
 //configuramos la url de retorno o redirección
 builder.Services.ConfigureApplicationCookie(options =>
@@ -31,6 +34,9 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
     options.Lockout.MaxFailedAccessAttempts = 3;
 });
+
+//email sender
+builder.Services.AddTransient<IEmailSender, MailJetMailSender>();
 
 builder.Services.AddRouting(options=>options.LowercaseUrls= true);
 

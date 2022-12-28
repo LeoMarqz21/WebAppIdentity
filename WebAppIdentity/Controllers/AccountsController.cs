@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using WebAppIdentity.Models;
 using WebAppIdentity.Models.ViewModels;
@@ -13,17 +14,19 @@ namespace WebAppIdentity.Controllers
         private readonly UserManager<IdentityUser> userManager;
         private readonly SignInManager<IdentityUser> signInManager;
         private readonly ILogger<AccountsController> logger;
+        private readonly IEmailSender emailSender;
 
         public AccountsController(
             ApplicationDbContext context, IMapper mapper, 
             UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            ILogger<AccountsController> logger)
+            ILogger<AccountsController> logger, IEmailSender emailSender)
         {
             this.context = context;
             this.mapper = mapper;
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.logger = logger;
+            this.emailSender = emailSender;
         } 
 
         [HttpGet]
@@ -127,9 +130,81 @@ namespace WebAppIdentity.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RecoverPassword(RecoverPasswordViewModel model)
         {
-            return Ok();
+            //validamos que no haya errores
+            if(!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            //buscamos usuario con el email proporcionado
+            var user = await userManager.FindByEmailAsync(model.Email);
+            
+            if (user == null)
+            {
+                //mensaje de error en caso de que no exista un usuario con dicho email
+                ModelState.AddModelError(string.Empty, "No existe registro con este email");
+                return View(model);
+            }
+            //token que validara la recuperacion de la contraseña
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            //url para recuperar contraseña
+            var returnUrl = Url.Action("ResetPassword", "Accounts", new { userId = user.Id, code = token }, HttpContext.Request.Scheme);
+            //mensaje de email
+            var htmlMessage = $"Recuperar contraseña, Click Aqui: <a href=\"{returnUrl}\">Link</a>";
+            //enviamos email de recuperacion de contraseña
+            await emailSender.SendEmailAsync(model.Email, "Recuperar contraseña - WAI", htmlMessage);
+            //redirigimos a una vista de confirmacion de envio de email para recuperacion de contraseña
+            return RedirectToAction("ResetPasswordInProcess", "Accounts");
+        }
+
+        [HttpGet]
+        public IActionResult ResetPasswordInProcess()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string code = null)
+        {
+            if(code is null)
+            {
+                return View("ErrorResetPassword");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (model is null)
+            {
+                return View("ErrorResetPassword");
+            }
+            //verificamos que exista el usuario con el email enviado
+            var user = await userManager.FindByEmailAsync(model.Email);
+
+            if(user is null)
+            {
+                return View("ErrorResetPassword");
+            }
+            //cambiamos la contraseña, validando el codigo o token antes obtenido
+            var result = await userManager.ResetPasswordAsync(user, model.Code, model.PasswordHash);
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("ConfirmResetPassword");
+            }
+
+            ErrorHandler(result);
+            return View(model);
+        }
+
+        public IActionResult ConfirmResetPassword()
+        {
+            return View();
         }
 
         private void ErrorHandler(IdentityResult result)
