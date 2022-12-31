@@ -1,4 +1,9 @@
-﻿@using WebAppIdentity.Models.ViewModels;
+﻿@using Microsoft.AspNetCore.Authentication;
+@using WebAppIdentity.Models.ViewModels;
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<IdentityUser> signInManager
+
 @model LoginViewModel
 
 @{
@@ -43,15 +48,40 @@
                     <a asp-action="RecoverPassword" asp-controller="Accounts" class="">Recuperar contraseña</a></p>
             </div>
 
-            <div class="mb-3 mt-3">
-                <h5 class="text-center mb-3">--- Inicio sesión con metodos externos ---</h5>
+            @*//REDES SOCIALES*@
+            @{
+                var schemes = await signInManager.GetExternalAuthenticationSchemesAsync();
+                List<AuthenticationScheme> providers = schemes.ToList();
+            }
 
-                <div class="d-flex justify-content-center gap-3">
-                    <a class="btn-social-network btn-google"><i class="bi bi-google"></i>oogle</a>
-                    <a class="btn-social-network btn-facebook"><i class="bi bi-facebook"></i>acebook</a>
+            @if(providers.Count() > 0)
+            {
+                <div class="mb-3 mt-3">
+                    <h5 class="text-center mb-3">--- Inicio sesión con metodos externos ---</h5>
+
+                    <form asp-action="ExternalAccess" asp-controller="Accounts" asp-route-returnUrl="@ViewData["returnUrl"]" method="post">
+                        @providers.Count
+                            @foreach (AuthenticationScheme provider in providers)
+                            {
+
+                                <button 
+                                    type="submit" 
+                                    name="provider" 
+                                    value="@provider.Name"
+                                    class="btn-social-network btn-@provider.Name.ToLower() w-100">
+                                        @provider.Name.ToLower()
+                                </button>
+                            }
+                    </form>
+
+                    @*<div class="d-flex justify-content-center gap-3">
+                        <a class="btn-social-network btn-google"><i class="bi bi-google"></i>oogle</a>
+                        <a class="btn-social-network btn-facebook"><i class="bi bi-facebook"></i>acebook</a>
+                    </div>*@
+
                 </div>
+            }
 
-            </div>
         </div>
         <div class="col-md-3"></div>
         <div class="col-md-3"></div>

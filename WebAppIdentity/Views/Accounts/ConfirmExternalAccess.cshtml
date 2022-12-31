@@ -1,0 +1,45 @@
+﻿@using WebAppIdentity.Models.ViewModels;
+@model ConfirmExternalAccessViewModel
+
+@{
+    ViewData["Title"] = "Confirmación de acceso externo";
+}
+
+<h2 class="text-info">Registro</h2>
+<h3>Asociar su cuenta de: @ViewData["providerName"]</h3>
+
+<form asp-controller="Accounts" asp-action="ConfirmExternalAccess" method="post" asp-route-returnUrl="@ViewData["returnUrl"]">
+    <hr/>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <p>
+        Usted ha ingresado correctamente con <strong>@ViewData["providerName"]</strong>.
+        Ingrese un nombre de usuario para este sitio a continuación y haga click en el boton de registrarse
+        para finalizar el inicio de sesión.
+    </p>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="mt-2 mb-3">
+                <label asp-for="Email"></label>
+                <input type="text" asp-for=Email placeholder="Ingrese su email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class=" mb-3">
+                <label asp-for="Name"></label>
+                <input type="text" asp-for=Name placeholder="Ingrese su nombre de usuario" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class=" mb-3">
+                <label asp-for="UserName"></label>
+                <input type="text" asp-for=UserName placeholder="Ingrese su nombre de usuario" class="form-control" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+
+            <div>
+                <button type="submit" class="btn btn-success">Enviar</button>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
+using System.Security.Claims;
 using WebAppIdentity.Models;
 using WebAppIdentity.Models.ViewModels;
 
@@ -57,17 +60,51 @@ namespace WebAppIdentity.Controllers
             //verificamos si los datos se guardaron o hubo un error
             if(result.Succeeded)
             {
+                //generar token para confirmacion de registro
+                var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                //url de retorno
+                var confirmEmailUrl = Url.Action("ConfirmEmail", "Accounts", new { userId = user.Id, code = token }, HttpContext.Request.Scheme);
+                //mensaje de email
+                var htmlMessage = $"Confirmar cuenta, Click Aqui: <a href=\"{confirmEmailUrl}\">Link</a>";
+                //enviamos email de recuperacion de contraseña
+                await emailSender.SendEmailAsync(model.Email, "Confirmación de cuenta - WAI", htmlMessage);
                 //se crea una sesión
                 await signInManager.SignInAsync(user, isPersistent: false);
                 //nos redirige al Home de la aplicación
                 return LocalRedirect(returnUrl);
             }
-            logger.LogInformation("hubo un error en el guardado de datos del metodo de registro");
             //manejo los erores y los carga para mostrarselos al usuario
             ErrorHandler(result);
             //retornamos la vista al usuario con todos sus datos y posibles errores
             return View(model);
-        }   
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> confirmEmail(string userId = null, string code = null)
+        {
+            if(userId is null && code is null)
+            {
+                return View("Error404");
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user is null) return View("Error404");
+            //confirmamos el la cuenta atraves del token recibido en mi email
+            var result = await userManager.ConfirmEmailAsync(user, code);
+
+            if(result.Succeeded)
+            {
+                return View("ConfirmEmail");
+            }
+
+            return View("Error404");
+        }
+
+        public IActionResult ConfirmEmail()
+        {
+            return View();  
+        }
 
         [HttpGet]
         public IActionResult Login(string returnUrl = null)
@@ -160,6 +197,7 @@ namespace WebAppIdentity.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult ResetPasswordInProcess()
         {
             return View();
@@ -206,6 +244,96 @@ namespace WebAppIdentity.Controllers
         {
             return View();
         }
+
+        public IActionResult Error404()
+        {
+            return View();
+        }
+
+        //---------------------------------------------------------
+        //facebook, google, twitter
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public IActionResult ExternalAccess(string provider, string returnUrl = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            //capturamos la url de retorno
+            ViewData["returnUrl"] = returnUrl;
+            var redirection = Url.Action("ExternalAccessCallback", "Accounts", new { ReturnUrl = returnUrl });
+            var properties = signInManager.ConfigureExternalAuthenticationProperties(provider, redirection);
+            return Challenge(properties, provider);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ExternalAccessCallback(string returnUrl = null, string error = null)
+        {
+            if(error is not null)
+            {
+                ModelState.AddModelError(string.Empty, $"Error en acceso externo: {error}");
+                return View(nameof(Login));
+            }
+            var info = await signInManager.GetExternalLoginInfoAsync();
+            if(info is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            //acceder con usuario en el proveedor externo
+            var result = await signInManager
+                .ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
+            
+            if(result.Succeeded)
+            {   //actualizando tokens de acceso
+                await signInManager.UpdateExternalAuthenticationTokensAsync(externalLogin: info);
+                return LocalRedirect(returnUrl);
+            }else
+            {
+                ViewData["returnUrl"] = returnUrl;
+                ViewData["providerName"] = info.ProviderDisplayName;
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                var name = info.Principal.FindFirstValue(ClaimTypes.Name);
+                return View("ConfirmExternalAccess", new ConfirmExternalAccessViewModel { Email = email, Name = name});
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmExternalAccess(ConfirmExternalAccessViewModel model, string returnUrl = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+            if(!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            //obtener la informacion del usuario del proveedor externo
+            var info = await signInManager.GetExternalLoginInfoAsync();
+            if(info is null)
+            {
+                return View(model);
+            }
+
+            var user = new User { UserName = model.UserName, Name = model.Name, Email = model.Email };
+            var result = await userManager.CreateAsync(user);
+
+            if(result.Succeeded)
+            {
+                result = await userManager.AddLoginAsync(user, info);
+                if(result.Succeeded)
+                {
+                    await signInManager.SignInAsync(user, isPersistent: false);
+                    await signInManager.UpdateExternalAuthenticationTokensAsync(info);
+                    return LocalRedirect(returnUrl);
+                }
+
+            }
+            ErrorHandler(result);
+
+            return View(model);
+        }
+
 
         private void ErrorHandler(IdentityResult result)
         {
