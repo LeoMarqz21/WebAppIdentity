@@ -42,6 +42,13 @@ builder.Services.AddAuthentication().AddFacebook(options =>
     options.AppSecret = builder.Configuration["Facebook:AppSecret"];
 });
 
+//autenticacion con google
+builder.Services.AddAuthentication().AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+});
+
 //email sender
 builder.Services.AddTransient<IEmailSender, MailJetMailSender>();
 
