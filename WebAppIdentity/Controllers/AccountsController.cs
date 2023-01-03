@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
 using WebAppIdentity.Models;
 using WebAppIdentity.Models.ViewModels;
 
@@ -18,11 +19,12 @@ namespace WebAppIdentity.Controllers
         private readonly SignInManager<IdentityUser> signInManager;
         private readonly ILogger<AccountsController> logger;
         private readonly IEmailSender emailSender;
+        private readonly UrlEncoder urlEncoder;
 
         public AccountsController(
             ApplicationDbContext context, IMapper mapper, 
             UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            ILogger<AccountsController> logger, IEmailSender emailSender)
+            ILogger<AccountsController> logger, IEmailSender emailSender, UrlEncoder urlEncoder)
         {
             this.context = context;
             this.mapper = mapper;
@@ -30,6 +32,7 @@ namespace WebAppIdentity.Controllers
             this.signInManager = signInManager;
             this.logger = logger;
             this.emailSender = emailSender;
+            this.urlEncoder = urlEncoder;
         } 
 
         [HttpGet]
@@ -136,8 +139,14 @@ namespace WebAppIdentity.Controllers
                 ModelState.AddModelError(string.Empty, "Espere un minuto y luego intente iniciar sesion");
                 return View(model);
             }
+            //MFA
+            if (result.RequiresTwoFactor)
+            {
+                return RedirectToAction(nameof(VerifyAuthenticationCode), new { returnUrl, model.RememberMe });
+            }
+
             //resultado de intento de inicio de sesion
-            if(result.Succeeded)
+            if (result.Succeeded)
             {
                 //todo va bien
                 //return RedirectToAction("Index", "Home");
@@ -288,7 +297,13 @@ namespace WebAppIdentity.Controllers
             {   //actualizando tokens de acceso
                 await signInManager.UpdateExternalAuthenticationTokensAsync(externalLogin: info);
                 return LocalRedirect(returnUrl);
-            }else
+            }
+
+            if(result.RequiresTwoFactor)
+            {
+                return RedirectToAction(nameof(VerifyAuthenticationCode), new { returnUrl = returnUrl });
+            }
+            else
             {
                 ViewData["returnUrl"] = returnUrl;
                 ViewData["providerName"] = info.ProviderDisplayName;
@@ -334,6 +349,93 @@ namespace WebAppIdentity.Controllers
             return View(model);
         }
 
+
+        //MFA = Multi-Factor Authentication
+        //-----------------------------------------------------------------
+
+        [HttpGet]
+        public async Task<IActionResult> EnableMFA()
+        {
+            //QR
+            string authUrlFormat = "otpauth://totp/{0}:{1}?secret={2}&digits=6";
+
+            var user = await userManager.GetUserAsync(User);
+            await userManager.ResetAuthenticatorKeyAsync(user);
+            var token = await userManager.GetAuthenticatorKeyAsync(user);
+
+            //habilitar codigo QR
+            string authUrl = string.Format(authUrlFormat, urlEncoder.Encode("WAI"), urlEncoder.Encode(user.Email), token);
+
+            var mfa = new MultiFactorAuthenticationViewModel { Token = token, UrlQRCode = authUrl };
+            return View(mfa);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EnableMFA(MultiFactorAuthenticationViewModel model)
+        {
+            if(!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var user = await userManager.GetUserAsync(User);
+            var succeded = await userManager
+                .VerifyTwoFactorTokenAsync(user, userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
+            if(succeded)
+            {
+                await userManager.SetTwoFactorEnabledAsync(user, true);
+                return RedirectToAction(nameof(ConfirmEnableMFA));
+            }
+            ModelState.AddModelError("verificacion", "Su verificacion de dos factores fallo o no fue aceptada");
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult ConfirmEnableMFA()
+        {
+            //TODO
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VerifyAuthenticationCode(bool remenberData, string returnUrl = null)
+        {
+            var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
+            if(user is null)
+                return View(nameof(Error404));
+            ViewData["returnUrl"] = returnUrl ?? Url.Content("~/");
+            var model = new VerifyAuthenticationCodeViewModel { RememberData = remenberData, ReturnUrl = returnUrl };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyAuthenticationCode(VerifyAuthenticationCodeViewModel model)
+        {
+            model.ReturnUrl = model.ReturnUrl ?? Url.Content("~/");
+            if(!ModelState.IsValid)
+                return View(model);
+
+            var result = await signInManager
+                .TwoFactorAuthenticatorSignInAsync(model.Code, model.RememberData, rememberClient: true);
+
+            if(result.Succeeded)
+            {
+                return LocalRedirect(model.ReturnUrl);
+            }
+            if(result.IsLockedOut)
+            {
+                return View(nameof(Locked));
+            }
+            ModelState.AddModelError(string.Empty, "Su intento de autenticacion no ha sido validado");
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult Locked()
+        {
+            return View();
+        }
 
         private void ErrorHandler(IdentityResult result)
         {

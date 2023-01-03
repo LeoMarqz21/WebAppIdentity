@@ -1,0 +1,44 @@
+﻿@using WebAppIdentity.Models.ViewModels;
+
+@model MultiFactorAuthenticationViewModel
+
+
+<p>Por favor ingrese el codigo en su App Authenticator: @Model.Token</p>
+
+<p>
+    Tambien puedes escanear el siguiente codigo QR
+</p>
+
+<div id="QRCode"></div>
+
+
+<form asp-action="EnableMFA" asp-controller="Accounts" method="post">
+    <input type="hidden" asp-for="Token" />
+    <hr/>
+    <div class="row">
+        <div class="col-sm-7">
+            <div class="col-md-12">
+                <label asp-for="Code" class="form-label"></label>
+                <input type="text" asp-for="Code" class="form-control" placeholder="Ingresa el codigo generado por tu app autenticacion" />
+                <span asp-validation-for="Code" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-sm-5">
+            <div class="col-md-12 pt-4">
+                <button type="submit" class="btn btn-success mt-3">
+                    Enviar <i class="bi bi-arrow-right-circle-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/qrcode.js"></script>
+    <script>
+        const QR = new QRCode(document.getElementById("QRCode"), "@Model.UrlQRCode");
+
+    </script>
+}

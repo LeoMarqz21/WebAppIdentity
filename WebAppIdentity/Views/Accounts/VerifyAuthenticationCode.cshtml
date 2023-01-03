@@ -1,0 +1,37 @@
+﻿@using WebAppIdentity.Models.ViewModels;
+@model VerifyAuthenticationCodeViewModel
+
+<h2>Verificar codigo autenticador</h2>
+
+<form 
+    asp-action="VerifyAuthenticationCode" 
+    asp-controller="Accounts" 
+    asp-route-returnUrl="@ViewData["returnUrl"]" 
+    method="post">
+    <div class="text-danger" asp-validation-summary="ModelOnly"></div>
+    
+    <input type="hidden" asp-for="RememberData"  />
+
+    <div class="row">
+        <div class="col-sm-7">
+            <div class="col-md-12">
+                <label asp-for="Code" class="form-label"></label>
+                <input type="text" asp-for="Code" class="form-control" placeholder="Ingrese el codigo generado por su app autenticadora" />
+                <span class="text-danger" asp-validation-for="Code"></span>
+            </div>
+        </div>
+        <div class="col-sm-5">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-success mt-3" >
+                    Enviar <i class="bg-info bi-arrow-right-circle-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
