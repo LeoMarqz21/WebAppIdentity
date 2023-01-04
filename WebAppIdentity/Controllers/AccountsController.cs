@@ -370,6 +370,15 @@ namespace WebAppIdentity.Controllers
             return View(mfa);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> DisableMFA()
+        {
+            var user = await userManager.GetUserAsync(User);
+            await userManager.ResetAuthenticatorKeyAsync(user);
+            await userManager.SetTwoFactorEnabledAsync(user, enabled: false);
+            return RedirectToAction(nameof(Index), "Home");
+        }
+
         [HttpPost]
         public async Task<IActionResult> EnableMFA(MultiFactorAuthenticationViewModel model)
         {

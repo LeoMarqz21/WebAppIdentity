@@ -6,6 +6,14 @@
     <h1 class="display-4">Welcome</h1>
     @if(User.Identity.IsAuthenticated)
     {
-        <a asp-action="EnableMFA" asp-controller="Accounts"> Habilitar MFA</a>
+        var mfa = ViewData["enableMFA"];
+
+        if(mfa != null && mfa.ToString().ToLower() == "true")
+        {
+            <a class="text-danger" asp-action="DisableMFA" asp-controller="Accounts"> Deshabilitar MFA</a>
+        }else{
+            <a asp-action="EnableMFA" asp-controller="Accounts"> Habilitar MFA</a>
+        }
+
     }
 </div>
