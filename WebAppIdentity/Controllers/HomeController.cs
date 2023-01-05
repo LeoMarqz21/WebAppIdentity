@@ -6,6 +6,7 @@ using WebAppIdentity.Models;
 
 namespace WebAppIdentity.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -17,7 +18,6 @@ namespace WebAppIdentity.Controllers
             this.userManager = userManager;
         }
 
-        [Authorize]
         public async Task<IActionResult> Index()
         {
             var user = await userManager.GetUserAsync(User);
@@ -32,7 +32,6 @@ namespace WebAppIdentity.Controllers
             return View();
         }
 
-        [Authorize]
         public IActionResult Privacy()
         {
             return View();

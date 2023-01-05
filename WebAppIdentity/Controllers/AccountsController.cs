@@ -11,6 +11,7 @@ using WebAppIdentity.Models.ViewModels;
 
 namespace WebAppIdentity.Controllers
 {
+    [Authorize]
     public class AccountsController : Controller
     {
         private readonly ApplicationDbContext context;
@@ -20,11 +21,13 @@ namespace WebAppIdentity.Controllers
         private readonly ILogger<AccountsController> logger;
         private readonly IEmailSender emailSender;
         private readonly UrlEncoder urlEncoder;
+        private readonly RoleManager<IdentityRole> roleManager;
 
         public AccountsController(
             ApplicationDbContext context, IMapper mapper, 
             UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            ILogger<AccountsController> logger, IEmailSender emailSender, UrlEncoder urlEncoder)
+            ILogger<AccountsController> logger, IEmailSender emailSender, UrlEncoder urlEncoder, 
+            RoleManager<IdentityRole> roleManager)
         {
             this.context = context;
             this.mapper = mapper;
@@ -33,9 +36,11 @@ namespace WebAppIdentity.Controllers
             this.logger = logger;
             this.emailSender = emailSender;
             this.urlEncoder = urlEncoder;
+            this.roleManager = roleManager;
         } 
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Register(string returnUrl = null)
         {
             //si returnUrl es null, este se llenara con la direccion a pagina raiz
@@ -47,8 +52,17 @@ namespace WebAppIdentity.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
+            //rol
+            if(!await roleManager.RoleExistsAsync("user"))
+            {
+                //crear rol
+                await roleManager.CreateAsync(new IdentityRole("user"));
+
+            }
+
             returnUrl = returnUrl ?? Url.Content("~/");
             ViewData["returnUrl"] = returnUrl;
             //valida si no hay errores
@@ -63,6 +77,8 @@ namespace WebAppIdentity.Controllers
             //verificamos si los datos se guardaron o hubo un error
             if(result.Succeeded)
             {
+                //asignar role
+                await userManager.AddToRoleAsync(user, "user");
                 //generar token para confirmacion de registro
                 var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
                 //url de retorno
@@ -104,12 +120,15 @@ namespace WebAppIdentity.Controllers
             return View("Error404");
         }
 
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult ConfirmEmail()
         {
             return View();  
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Login(string returnUrl = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
@@ -120,6 +139,7 @@ namespace WebAppIdentity.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
@@ -170,6 +190,8 @@ namespace WebAppIdentity.Controllers
             return RedirectToAction("Login", "Accounts");
         }
 
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult RecoverPassword()
         {
             return View();
@@ -177,6 +199,7 @@ namespace WebAppIdentity.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> RecoverPassword(RecoverPasswordViewModel model)
         {
             //validamos que no haya errores
@@ -213,6 +236,7 @@ namespace WebAppIdentity.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult ResetPassword(string code = null)
         {
             if(code is null)
@@ -224,6 +248,7 @@ namespace WebAppIdentity.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (model is null)
@@ -249,11 +274,14 @@ namespace WebAppIdentity.Controllers
             return View(model);
         }
 
+        [AllowAnonymous]
         public IActionResult ConfirmResetPassword()
         {
             return View();
         }
 
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult Error404()
         {
             return View();
@@ -441,6 +469,7 @@ namespace WebAppIdentity.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Locked()
         {
             return View();
